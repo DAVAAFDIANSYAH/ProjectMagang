@@ -84,7 +84,7 @@ const Dashboardstyles = StyleSheet.create({
     marginBottom: 16,
     marginTop: 20, // ✅ tambahkan ini
 
-  },
+  },  
   infoCard: {
     flex: 1,
     backgroundColor: '#fff',
@@ -103,6 +103,13 @@ const Dashboardstyles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+  jabatanText: {
+  color: '#fff',
+  fontSize: 14,
+  fontWeight: '400',
+  marginTop: 2,
+},
+
   messageBox: {
     backgroundColor: '#fff',
     padding: 16,

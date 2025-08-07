@@ -1,3 +1,4 @@
+// src/screens/LoginScreen.tsx
 import React, { useState } from 'react';
 import {
   View,
@@ -13,9 +14,10 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/Navigation';
-import styles from '../styles/Loginstyles'; // <== Import styling terpisah
-import api from '../services/api';  
+import styles from '../styles/Loginstyles';
+import api from '../services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Login'>;
 
 export default function LoginScreen() {
@@ -24,25 +26,43 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
 
   const handleLogin = async () => {
-  if (!email || !password) {
-    Alert.alert('Error', 'Please enter email and password');
-    return;
-  }
+    if (!email || !password) {
+      Alert.alert('Error', 'Please enter email and password');
+      return;
+    }
 
-  try {
-    const response = await api.post('/login', { email, password });
-    const { token, user } = response.data;
+    try {
+      const response = await api.post('/login', { email, password });
+      const { token, user } = response.data;
+      const karyawan = user.karyawan || {};
 
-    // Simpan nama user ke AsyncStorage
-    await AsyncStorage.setItem('userName', user.name);
+      // Format user untuk disimpan
+      const formattedUser = {
+        id: user.id,
+        name: user.name || '',
+        email: user.email || '',
+        telephone: karyawan.telephone || '',
+        jenis_kelamin: karyawan.jenis_kelamin || '',
+        tempat_lahir: karyawan.tempat_lahir || '',
+        tanggal_lahir: karyawan.tanggal_lahir || '',
+        address: karyawan.alamat || '',
+        position: karyawan.jabatan || '',
+      };
 
-    Alert.alert('Welcome', `Hello, ${user.name}`);
-    navigation.replace('bottomnav');
-  } catch (error: any) {
-    console.error(error.response?.data || error.message);
-    Alert.alert('Login Failed', error.response?.data?.message || 'Something went wrong');
-  }
-};
+      // Simpan ke AsyncStorage
+      await AsyncStorage.setItem('auth_token', token);
+      await AsyncStorage.setItem('userName', user.name);
+      await AsyncStorage.setItem('userId', user.id.toString());
+      await AsyncStorage.setItem('userData', JSON.stringify(formattedUser));
+      
+
+      Alert.alert('Welcome', `Hello, ${user.name}`);
+      navigation.replace('bottomnav');
+    } catch (error: any) {
+      console.error(error.response?.data || error.message);
+      Alert.alert('Login Failed', error.response?.data?.message || 'Something went wrong');
+    }
+  };
 
   return (
     <View style={styles.root}>

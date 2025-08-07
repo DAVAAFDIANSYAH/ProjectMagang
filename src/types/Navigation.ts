@@ -5,7 +5,12 @@ export type RootStackParamList = {
   Dashboard: undefined;
   profile: undefined;
   bottomnav: undefined;
-  products: undefined;
   Maps: undefined;
   gaji:undefined;
+  detailprofile: undefined;
+  editprofile: undefined;
+  SplashScreen: undefined;
+  changePassword: undefined;
+  Notifikasi:undefined;
+
 };

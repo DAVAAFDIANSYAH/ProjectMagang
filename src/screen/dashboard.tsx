@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   SafeAreaView,
   StatusBar,
   ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/Feather';
@@ -16,6 +17,7 @@ import { RootStackParamList } from '../types/Navigation';
 import styles from '../styles/Dashboardstyles';
 import { getCurrentPosition, getLocationName } from '../services/location';
 import { getPrayerTimes, PrayerTimes } from '../services/prayer';
+import api from '../services/api';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Maps'>;
 
@@ -26,46 +28,84 @@ export default function Dashboard() {
   const [location, setLocation] = useState('Memuat lokasi...');
   const [prayerTimes, setPrayerTimes] = useState<PrayerTimes | null>(null);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    AsyncStorage.getItem('userName').then(name => {
-      if (name) setUsername(name);
-    });
-  }, []);
+  const [refreshing, setRefreshing] = useState(false);
+  const [infoTitle, setInfoTitle] = useState('');
+  const [infoDescription, setInfoDescription] = useState('');
+  const [userJabatan, setUserJabatan] = useState<string>('');
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  useEffect(() => {
-    const timeoutId = setTimeout(() => setLoading(false), 15000);
+  const fetchAllData = useCallback(async () => {
+    setRefreshing(true);
+    setLoading(true);
 
-    getCurrentPosition()
-      .then(async coords => {
-        const { latitude, longitude } = coords;
+    try {
+      const name = await AsyncStorage.getItem('userName');
+      if (name) setUsername(name);
 
-        setLocation(await getLocationName(latitude, longitude));
-        setPrayerTimes(await getPrayerTimes(latitude, longitude));
+      // Ambil jabatan dari userData
+      const userDataStr = await AsyncStorage.getItem('userData');
+      if (userDataStr) {
+        const userData = JSON.parse(userDataStr);
+        if (userData.position) {
+          setUserJabatan(userData.position);
+        }
+      }
 
-        clearTimeout(timeoutId);
-        setLoading(false);
-      })
-      .catch(() => {
-        setLocation('Gagal mendapatkan lokasi');
-        setPrayerTimes({
-          subuh: '04:30',
-          terbit: '05:45',
-          dzuhur: '12:00',
-          ashar: '15:15',
-          maghrib: '18:00',
-          isya: '19:15',
-        });
-        clearTimeout(timeoutId);
-        setLoading(false);
+      const coords = await getCurrentPosition();
+      const { latitude, longitude } = coords;
+
+      const locName = await getLocationName(latitude, longitude);
+      setLocation(locName);
+
+      const prayer = await getPrayerTimes(latitude, longitude);
+      setPrayerTimes(prayer);
+    } catch (err) {
+      setLocation('Gagal mendapatkan lokasi');
+      setPrayerTimes({
+        subuh: '04:30',
+        terbit: '05:45',
+        dzuhur: '12:00',
+        ashar: '15:15',
+        maghrib: '18:00',
+        isya: '19:15',
       });
+    }
 
-    return () => clearTimeout(timeoutId);
+    try {
+      const token = await AsyncStorage.getItem('auth_token');
+      if (token) {
+        const response = await api.get('/informasi-karyawan', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const info = response.data;
+
+        if (info && info.title && info.description) {
+          setInfoTitle(info.title);
+          setInfoDescription(info.description);
+        } else {
+          setInfoTitle('Informasi');
+          setInfoDescription('Tidak ada informasi tersedia.');
+        }
+      }
+    } catch (error) {
+      console.error('Gagal mengambil informasi:', error);
+      setInfoTitle('Informasi');
+      setInfoDescription('Tidak ada informasi tersedia.');
+    }
+
+    setRefreshing(false);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    fetchAllData();
   }, []);
 
   const formatTime = (d: Date) => ({
@@ -79,20 +119,24 @@ export default function Dashboard() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar backgroundColor="#22B14C" barStyle="light-content" />
-      <ScrollView contentContainerStyle={{ paddingBottom: 30 }}>
-       <View style={styles.headerBox}>
-  <View style={styles.profileRow}>
-    <View style={styles.avatar} />
-    <View style={{ flex: 1 }}>
-      <Text style={styles.welcome}>Selamat Pagi, {username}</Text>
-    </View>
-    <TouchableOpacity onPress={() => console.log('Notifikasi ditekan')}>
-      <Icon name="bell" size={24} color="#fff" />
-    </TouchableOpacity>
-  </View>
-</View>
-
-        
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 30 }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={fetchAllData} colors={['#22B14C']} />
+        }
+      >
+        <View style={styles.headerBox}>
+          <View style={styles.profileRow}>
+            <View style={styles.avatar} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.welcome}>Welcome, {username}</Text>
+              <Text style={styles.jabatanText}>{userJabatan}</Text> {/* Tambahan: jabatan */}
+            </View>
+            <TouchableOpacity onPress={() => navigation.navigate('Notifikasi')}>
+              <Icon name="bell" size={24} color="#fff" />
+            </TouchableOpacity>
+          </View>
+        </View>
 
         <View style={styles.absenCard}>
           <Text style={styles.dateText}>Senin 4 Agustus 2025</Text>
@@ -121,7 +165,7 @@ export default function Dashboard() {
           ) : prayerTimes ? (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 12 }}>
               <View style={styles.prayerTimesRow}>
-                {[ 
+                {[
                   { label: 'Subuh', time: prayerTimes.subuh, icon: 'cloud' },
                   { label: 'Terbit', time: prayerTimes.terbit, icon: 'sunrise' },
                   { label: 'Dzuhur', time: prayerTimes.dzuhur, icon: 'sun' },
@@ -156,13 +200,9 @@ export default function Dashboard() {
         </View>
 
         <View style={styles.messageBox}>
-          <Text style={styles.messageHeader}>Hai</Text>
-          <Text style={styles.messageText}>
-            Selamat datang di aplikasi Marison Regency. Silahkan melakukan absensi{'\n'}Jangan telat
-            ya:))
-          </Text>
+          <Text style={styles.messageHeader}>{infoTitle}</Text>
+          <Text style={styles.messageText}>{infoDescription}</Text>
         </View>
-
       </ScrollView>
     </SafeAreaView>
   );

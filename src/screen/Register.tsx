@@ -45,9 +45,11 @@ export default function RegisterScreen() {
       password_confirmation
     });
 
-    const { user } = response.data;
+    const { user, token } = response.data;
 
     await AsyncStorage.setItem('userName', user.name);
+    await AsyncStorage.setItem('userEmail', user.email); // 👈 tambahkan baris ini
+    await AsyncStorage.setItem('usertoken',token);
 
     console.log('Registration success:', user);
     Alert.alert('Success', 'Account created successfully!');
@@ -86,7 +88,7 @@ export default function RegisterScreen() {
               <TextInput
                 style={registerStyles.input}
                 placeholder="Name"
-                placeholderTextColor="#00FF99"
+                placeholderTextColor="white"
                 value={name}
                 onChangeText={setName}
                 autoCapitalize="words"
@@ -94,7 +96,7 @@ export default function RegisterScreen() {
               <TextInput
                 style={registerStyles.input}
                 placeholder="Email Address"
-                placeholderTextColor="#00FF99"
+                placeholderTextColor="white"
                 keyboardType="email-address"
                 value={email}
                 onChangeText={setEmail}
@@ -104,7 +106,7 @@ export default function RegisterScreen() {
               <TextInput
                 style={registerStyles.input}
                 placeholder="Password"
-                placeholderTextColor="#00FF99"
+                placeholderTextColor="white"
                 secureTextEntry
                 value={password}
                 onChangeText={setPassword}
@@ -112,7 +114,7 @@ export default function RegisterScreen() {
                <TextInput
                 style={registerStyles.input}
                 placeholder="confirm password"
-                placeholderTextColor="#00FF99"
+                placeholderTextColor="white"
                 secureTextEntry
                 value={password_confirmation}
                 onChangeText={setConfrim_password}
