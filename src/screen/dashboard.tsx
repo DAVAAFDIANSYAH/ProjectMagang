@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/Feather';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/Navigation';
 import styles from '../styles/Dashboardstyles';
@@ -32,11 +32,34 @@ export default function Dashboard() {
   const [infoTitle, setInfoTitle] = useState('');
   const [infoDescription, setInfoDescription] = useState('');
   const [userJabatan, setUserJabatan] = useState<string>('');
+  const [shiftStatus, setShiftStatus] = useState<'masuk' | 'none'>('none');
+  const [startTime, setStartTime] = useState<Date | null>(null);
+  const [elapsedTime, setElapsedTime] = useState('00:00:00');
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+
+    if (shiftStatus === 'masuk' && startTime) {
+      interval = setInterval(() => {
+        const now = new Date().getTime();
+        const start = startTime.getTime();
+        const diff = now - start;
+
+        const hours = Math.floor(diff / (1000 * 60 * 60)).toString().padStart(2, '0');
+        const minutes = Math.floor((diff / (1000 * 60)) % 60).toString().padStart(2, '0');
+        const seconds = Math.floor((diff / 1000) % 60).toString().padStart(2, '0');
+
+        setElapsedTime(`${hours}:${minutes}:${seconds}`);
+      }, 1000);
+    }
+
+    return () => clearInterval(interval);
+  }, [shiftStatus, startTime]);
 
   const fetchAllData = useCallback(async () => {
     setRefreshing(true);
@@ -46,7 +69,6 @@ export default function Dashboard() {
       const name = await AsyncStorage.getItem('userName');
       if (name) setUsername(name);
 
-      // Ambil jabatan dari userData
       const userDataStr = await AsyncStorage.getItem('userData');
       if (userDataStr) {
         const userData = JSON.parse(userDataStr);
@@ -100,6 +122,18 @@ export default function Dashboard() {
       setInfoDescription('Tidak ada informasi tersedia.');
     }
 
+    const status = await AsyncStorage.getItem('shiftStatus');
+    const startTimeStr = await AsyncStorage.getItem('startTime');
+
+    if (status === 'masuk' && startTimeStr) {
+      setShiftStatus('masuk');
+      setStartTime(new Date(startTimeStr));
+    } else {
+      setShiftStatus('none');
+      setStartTime(null);
+      setElapsedTime('00:00:00');
+    }
+
     setRefreshing(false);
     setLoading(false);
   }, []);
@@ -108,29 +142,25 @@ export default function Dashboard() {
     fetchAllData();
   }, []);
 
-  const formatTime = (d: Date) => ({
-    hours: d.getHours().toString().padStart(2, '0'),
-    minutes: d.getMinutes().toString().padStart(2, '0'),
-    seconds: d.getSeconds().toString().padStart(2, '0'),
-  });
-
-  const { hours, minutes, seconds } = formatTime(time);
+  useFocusEffect(
+    useCallback(() => {
+      fetchAllData();
+    }, [fetchAllData])
+  );
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar backgroundColor="#22B14C" barStyle="light-content" />
       <ScrollView
         contentContainerStyle={{ paddingBottom: 30 }}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={fetchAllData} colors={['#22B14C']} />
-        }
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={fetchAllData} colors={['#22B14C']} />}
       >
         <View style={styles.headerBox}>
           <View style={styles.profileRow}>
             <View style={styles.avatar} />
             <View style={{ flex: 1 }}>
               <Text style={styles.welcome}>Welcome, {username}</Text>
-              <Text style={styles.jabatanText}>{userJabatan}</Text> {/* Tambahan: jabatan */}
+              <Text style={styles.jabatanText}>{userJabatan}</Text>
             </View>
             <TouchableOpacity onPress={() => navigation.navigate('Notifikasi')}>
               <Icon name="bell" size={24} color="#fff" />
@@ -139,15 +169,23 @@ export default function Dashboard() {
         </View>
 
         <View style={styles.absenCard}>
-          <Text style={styles.dateText}>Senin 4 Agustus 2025</Text>
+<Text style={styles.dateText}>
+  {new Intl.DateTimeFormat('id-ID', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(time)}
+</Text>
           <View style={styles.clockRow}>
-            <Text style={styles.clockNumber}>{hours}</Text>
-            <Text style={styles.clockNumber}>{minutes}</Text>
-            <Text style={styles.clockNumber}>{seconds}</Text>
+            <Text style={styles.clockNumber}>{elapsedTime}</Text>
           </View>
-          <Text style={styles.shift}>08:00 - 15:30</Text>
-          <TouchableOpacity style={styles.btnMasuk} onPress={() => navigation.navigate('Maps')}>
-            <Text style={styles.btnText}>→ Masuk</Text>
+          <Text style={styles.shift}>10:00 - 18:00</Text>
+          <TouchableOpacity
+            style={shiftStatus === 'none' ? styles.btnMasuk : styles.btnKeluar}
+            onPress={() => navigation.navigate('Maps')}
+          >
+            <Text style={styles.btnText}>→ {shiftStatus === 'none' ? 'Masuk' : 'Keluar'}</Text>
           </TouchableOpacity>
         </View>
 

@@ -5,12 +5,16 @@ import {
   PermissionsAndroid,
   Platform,
   Text,
+  TouchableOpacity,
+  Alert,
 } from 'react-native';
-import MapView, { Marker, Circle, Region } from 'react-native-maps';
+import MapView, { Marker, Circle } from 'react-native-maps';
 import Geolocation from '@react-native-community/geolocation';
 import haversine from 'haversine-distance';
+import { launchCamera } from 'react-native-image-picker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
 
-// Buat tipe koordinat
 type LatLng = {
   latitude: number;
   longitude: number;
@@ -20,8 +24,10 @@ const App = () => {
   const [userLocation, setUserLocation] = useState<LatLng | null>(null);
   const [distance, setDistance] = useState<string | null>(null);
   const [withinRange, setWithinRange] = useState(false);
+  const [shiftStatus, setShiftStatus] = useState<'none' | 'masuk' | 'keluar'>('none');
 
-  // Titik absen tetap
+  const navigation = useNavigation();
+
   const absenLocation: LatLng = {
     latitude: -7.828194,
     longitude: 110.374139,
@@ -31,6 +37,15 @@ const App = () => {
 
   useEffect(() => {
     let watchId: number;
+
+    const getShift = async () => {
+      const status = await AsyncStorage.getItem('shiftStatus');
+      if (status === 'masuk') {
+        setShiftStatus('masuk');
+      } else {
+        setShiftStatus('none');
+      }
+    };
 
     const requestLocationPermission = async () => {
       if (Platform.OS === 'android') {
@@ -68,6 +83,7 @@ const App = () => {
       );
     };
 
+    getShift();
     requestLocationPermission();
 
     return () => {
@@ -77,7 +93,51 @@ const App = () => {
     };
   }, []);
 
+  const handleCameraAbsen = async () => {
+    const granted = await PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.CAMERA
+    );
+
+    if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+      Alert.alert('Izin Kamera Ditolak', 'Anda harus mengizinkan kamera');
+      return;
+    }
+
+    launchCamera({ mediaType: 'photo', cameraType: 'back' }, async response => {
+      if (response.didCancel) {
+        console.log('Batal ambil foto');
+      } else if (response.errorCode) {
+        Alert.alert('Error', response.errorMessage || 'Gagal membuka kamera');
+      } else {
+        const photo = response.assets?.[0];
+        console.log('Foto berhasil:', photo?.uri);
+
+        const now = new Date();
+
+        if (shiftStatus === 'none') {
+          await AsyncStorage.setItem('shiftStatus', 'masuk');
+          await AsyncStorage.setItem('startTime', now.toISOString());
+          Alert.alert('Berhasil', '✅ Absen Masuk Berhasil');
+          setShiftStatus('masuk');
+        } else if (shiftStatus === 'masuk') {
+          await AsyncStorage.setItem('shiftStatus', 'none');
+          await AsyncStorage.removeItem('startTime');
+          Alert.alert('Berhasil', '✅ Absen Keluar Berhasil');
+          setShiftStatus('keluar'); // untuk sementara visual feedback
+        }
+
+        navigation.goBack(); // Kembali ke dashboard
+      }
+    });
+  };
+
   if (!userLocation) return <View style={styles.container} />;
+
+  const getAbsenLabel = () => {
+    if (shiftStatus === 'none') return '📸 Absen Masuk';
+    if (shiftStatus === 'masuk') return '📸 Absen Keluar';
+    return '';
+  };
 
   return (
     <View style={styles.container}>
@@ -111,9 +171,15 @@ const App = () => {
           ]}
         >
           {withinRange
-            ? '✅ Anda Berada Dalam Lingkup Absen'
-            : `❌ Anda Tidak Dalam Lingkup Absen${'\n'}Jarak Anda: ${distance} meter`}
+            ? `✅ Anda Dalam Lingkup Absen`
+            : `❌ Anda Diluar Lingkup\nJarak: ${distance} meter`}
         </Text>
+
+        {withinRange && (
+          <TouchableOpacity style={styles.absenButton} onPress={handleCameraAbsen}>
+            <Text style={styles.absenButtonText}>{getAbsenLabel()}</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
@@ -139,6 +205,18 @@ const styles = StyleSheet.create({
   },
   statusText: {
     textAlign: 'center',
+    fontSize: 16,
+    marginBottom: 10,
+  },
+  absenButton: {
+    backgroundColor: '#22B14C',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    marginTop: 10,
+  },
+  absenButtonText: {
+    color: 'white',
     fontSize: 16,
   },
 });

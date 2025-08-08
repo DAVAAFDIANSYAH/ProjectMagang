@@ -141,6 +141,14 @@ const Dashboardstyles = StyleSheet.create({
   borderRadius: 10,
   elevation: 3,
 },
+btnKeluar: {
+  backgroundColor: '#d9534f',
+  paddingVertical: 14,
+  paddingHorizontal: 25,
+  borderRadius: 10,
+  marginTop: 16,
+  alignItems: 'center',
+},
 
 locationTitle: {
   fontWeight: 'bold',

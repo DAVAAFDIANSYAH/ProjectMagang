@@ -17,7 +17,7 @@ export default function ProfileScreen({ navigation }: any) {
   const [avatar, setAvatar] = useState<string>(
     'https://i.pinimg.com/736x/21/f6/fc/21f6fc4abd29ba736e36e540a787e7da.jpg'
   );
-  const [userJabatan, setUserJabatan] = useState<string>('Staff');
+  const [userJabatan, setUserJabatan] = useState<string>('Memuat...');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -25,13 +25,23 @@ export default function ProfileScreen({ navigation }: any) {
       try {
         const storedName = await AsyncStorage.getItem('userName');
         const storedAvatar = await AsyncStorage.getItem('profileImage');
-        const storedJabatan = await AsyncStorage.getItem('userJabatan');
+        const storedUserData = await AsyncStorage.getItem('userData');
 
         if (storedName) setUsername(storedName);
         if (storedAvatar) setAvatar(storedAvatar);
-        if (storedJabatan) setUserJabatan(storedJabatan);
+
+        console.log('STORED USER DATA:', storedUserData);
+
+        if (storedUserData) {
+          const parsedUser = JSON.parse(storedUserData);
+          console.log('PARSED USER DATA:', parsedUser);
+          setUserJabatan(parsedUser.position || 'Tidak diketahui');
+        } else {
+          setUserJabatan('Tidak diketahui');
+        }
       } catch (error) {
         console.log('Error loading profile:', error);
+        setUserJabatan('Gagal memuat');
       } finally {
         setLoading(false);
       }
@@ -67,7 +77,7 @@ export default function ProfileScreen({ navigation }: any) {
         'auth_token',
         'userName',
         'profileImage',
-        'userJabatan',
+        'userData', // Hapus semua user data
       ]);
 
       navigation.reset({

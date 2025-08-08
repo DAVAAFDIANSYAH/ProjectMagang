@@ -10,7 +10,7 @@ const RiwayatStyles = StyleSheet.create({
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
     paddingBottom: 10,
-    marginTop: 30, // ✅ Tambahkan ini untuk geser ke bawah
+    marginTop: 30,
     elevation: 4,
   },
   content: {
@@ -44,6 +44,61 @@ const RiwayatStyles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 16,
+  },
+
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.4)',
+  },
+  modalContainer: {
+    width: '90%',
+    backgroundColor: 'white',
+    borderRadius: 15,
+    padding: 20,
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
+  modalLabel: {
+    alignSelf: 'flex-start',
+    fontWeight: '600',
+    marginBottom: 5,
+    fontSize: 14,
+  },
+  pickerWrapper: {
+    width: '100%',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 10,
+    marginBottom: 20,
+    overflow: 'hidden',
+  },
+  modalButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  cancelButton: {
+    flex: 1,
+    backgroundColor: '#22B14C',
+    padding: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  submitButton: {
+    flex: 1,
+    backgroundColor: '#22B14C',
+    padding: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginLeft: 8,
   },
 });
 
