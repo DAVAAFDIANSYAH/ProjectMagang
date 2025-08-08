@@ -6,8 +6,8 @@ export const styles = StyleSheet.create({
   dropdownWrapper: {
     backgroundColor: '#f9f9f9',
     margin: 16,
-    padding: 16,
-    marginTop: 50,          
+    padding: 10,
+    marginTop: 50,
     borderRadius: 10,
     elevation: 2,
   },
@@ -36,22 +36,32 @@ export const styles = StyleSheet.create({
     color: '#333',
     fontWeight: '600',
   },
+  reportContainer: {
+    marginTop: 20,
+    padding: 16,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    marginHorizontal: 16,
+  },
+  reportTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 12,
+  },
+  totalGaji: {
+    fontWeight: 'bold',
+    marginTop: 10,
+    color: 'green',
+  },
 });
 
-export const pickerSelectStyles = StyleSheet.create({
+export const pickerSelectStyles = {
   inputIOS: {
-    fontSize: 16,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    backgroundColor: 'white',
-    borderRadius: 8,
-    color: 'black',
-    paddingRight: 30,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: '#ccc',
-  },
-  inputAndroid: {
     fontSize: 16,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -63,4 +73,18 @@ export const pickerSelectStyles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ccc',
   },
-});
+  inputAndroid: {
+    fontSize: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 1,
+    backgroundColor: 'white',
+    borderRadius: 8,
+    color: 'black',
+    paddingRight: 30,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    
+  },
+    
+};
