@@ -103,32 +103,39 @@ const App = () => {
       return;
     }
 
-    launchCamera({ mediaType: 'photo', cameraType: 'back' }, async response => {
-      if (response.didCancel) {
-        console.log('Batal ambil foto');
-      } else if (response.errorCode) {
-        Alert.alert('Error', response.errorMessage || 'Gagal membuka kamera');
-      } else {
-        const photo = response.assets?.[0];
-        console.log('Foto berhasil:', photo?.uri);
+    launchCamera(
+      {
+        mediaType: 'photo',
+        cameraType: 'back',
+        saveToPhotos: false, // ⬅️ foto tidak akan masuk galeri
+      },
+      async response => {
+        if (response.didCancel) {
+          console.log('Batal ambil foto');
+        } else if (response.errorCode) {
+          Alert.alert('Error', response.errorMessage || 'Gagal membuka kamera');
+        } else {
+          const photo = response.assets?.[0];
+          console.log('Foto berhasil:', photo?.uri);
 
-        const now = new Date();
+          const now = new Date();
 
-        if (shiftStatus === 'none') {
-          await AsyncStorage.setItem('shiftStatus', 'masuk');
-          await AsyncStorage.setItem('startTime', now.toISOString());
-          Alert.alert('Berhasil', '✅ Absen Masuk Berhasil');
-          setShiftStatus('masuk');
-        } else if (shiftStatus === 'masuk') {
-          await AsyncStorage.setItem('shiftStatus', 'none');
-          await AsyncStorage.removeItem('startTime');
-          Alert.alert('Berhasil', '✅ Absen Keluar Berhasil');
-          setShiftStatus('keluar'); // untuk sementara visual feedback
+          if (shiftStatus === 'none') {
+            await AsyncStorage.setItem('shiftStatus', 'masuk');
+            await AsyncStorage.setItem('startTime', now.toISOString());
+            Alert.alert('Berhasil', '✅ Absen Masuk Berhasil');
+            setShiftStatus('masuk');
+          } else if (shiftStatus === 'masuk') {
+            await AsyncStorage.setItem('shiftStatus', 'none');
+            await AsyncStorage.removeItem('startTime');
+            Alert.alert('Berhasil', '✅ Absen Keluar Berhasil');
+            setShiftStatus('keluar'); // untuk sementara visual feedback
+          }
+
+          navigation.goBack(); // Kembali ke dashboard
         }
-
-        navigation.goBack(); // Kembali ke dashboard
       }
-    });
+    );
   };
 
   if (!userLocation) return <View style={styles.container} />;

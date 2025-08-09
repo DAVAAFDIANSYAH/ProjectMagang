@@ -12,7 +12,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../services/api';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 
 interface Notification {
   id: number;
@@ -42,7 +42,15 @@ export default function NotificationScreen() {
         },
       });
 
-      setNotifications(response.data);
+      // Gabungkan data lama dan baru, filter duplikat berdasarkan id
+      setNotifications(prev => {
+        const merged = [...prev, ...response.data];
+        const unique = merged.filter(
+          (item, index, self) =>
+            index === self.findIndex(n => n.id === item.id)
+        );
+        return unique;
+      });
     } catch (error: any) {
       console.error(error.response?.data || error.message);
       Alert.alert('Gagal Memuat', 'Tidak bisa memuat notifikasi');
@@ -51,9 +59,17 @@ export default function NotificationScreen() {
     }
   };
 
+  // Panggil pertama kali saat halaman dibuka
   useEffect(() => {
     fetchNotifications();
   }, []);
+
+  // Auto refresh setiap kali balik ke halaman ini
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchNotifications();
+    }, [])
+  );
 
   const renderItem = ({ item }: { item: Notification }) => (
     <View style={styles.card}>

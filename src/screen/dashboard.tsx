@@ -35,15 +35,17 @@ export default function Dashboard() {
   const [shiftStatus, setShiftStatus] = useState<'masuk' | 'none'>('none');
   const [startTime, setStartTime] = useState<Date | null>(null);
   const [elapsedTime, setElapsedTime] = useState('00:00:00');
+  const [unreadCount, setUnreadCount] = useState(0); // 🔹 jumlah notifikasi belum dibaca
 
+  // Timer jam real-time
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
+  // Hitung waktu kerja
   useEffect(() => {
     let interval: NodeJS.Timeout;
-
     if (shiftStatus === 'masuk' && startTime) {
       interval = setInterval(() => {
         const now = new Date().getTime();
@@ -57,9 +59,22 @@ export default function Dashboard() {
         setElapsedTime(`${hours}:${minutes}:${seconds}`);
       }, 1000);
     }
-
     return () => clearInterval(interval);
   }, [shiftStatus, startTime]);
+
+  // Ambil jumlah notifikasi belum dibaca
+  const fetchUnreadCount = useCallback(async () => {
+    try {
+      const stored = await AsyncStorage.getItem('notifications');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        const unread = parsed.filter((n: any) => !n.read).length;
+        setUnreadCount(unread);
+      }
+    } catch (e) {
+      console.log('Gagal mengambil unread count', e);
+    }
+  }, []);
 
   const fetchAllData = useCallback(async () => {
     setRefreshing(true);
@@ -134,9 +149,12 @@ export default function Dashboard() {
       setElapsedTime('00:00:00');
     }
 
+    // 🔹 Update unread badge
+    await fetchUnreadCount();
+
     setRefreshing(false);
     setLoading(false);
-  }, []);
+  }, [fetchUnreadCount]);
 
   useEffect(() => {
     fetchAllData();
@@ -163,20 +181,37 @@ export default function Dashboard() {
               <Text style={styles.jabatanText}>{userJabatan}</Text>
             </View>
             <TouchableOpacity onPress={() => navigation.navigate('Notifikasi')}>
-              <Icon name="bell" size={24} color="#fff" />
+              <View>
+                <Icon name="bell" size={24} color="#fff" />
+                {unreadCount > 0 && (
+                  <View
+                    style={{
+                      position: 'absolute',
+                      right: -6,
+                      top: -4,
+                      backgroundColor: 'red',
+                      borderRadius: 10,
+                      paddingHorizontal: 5,
+                      paddingVertical: 1,
+                    }}
+                  >
+                    <Text style={{ color: '#fff', fontSize: 10 }}>{unreadCount}</Text>
+                  </View>
+                )}
+              </View>
             </TouchableOpacity>
           </View>
         </View>
 
         <View style={styles.absenCard}>
-<Text style={styles.dateText}>
-  {new Intl.DateTimeFormat('id-ID', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  }).format(time)}
-</Text>
+          <Text style={styles.dateText}>
+            {new Intl.DateTimeFormat('id-ID', {
+              weekday: 'long',
+              day: 'numeric',
+              month: 'long',
+              year: 'numeric',
+            }).format(time)}
+          </Text>
           <View style={styles.clockRow}>
             <Text style={styles.clockNumber}>{elapsedTime}</Text>
           </View>
@@ -190,34 +225,35 @@ export default function Dashboard() {
         </View>
 
         <View style={styles.locationCard}>
-          <Text style={styles.locationTitle}>{location}</Text>
-          <Text style={styles.locationSubtitle}>Indonesia</Text>
+  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+    <Icon name="map-pin" size={24} color="#007bff" style={{ marginRight: 6 }} />
+    <Text style={styles.locationTitle}>{location}</Text>
+  </View>
+  <Text style={styles.locationSubtitle}>Indonesia</Text>
 
-          {loading ? (
-            <View style={{ marginTop: 12, alignItems: 'center' }}>
-              <ActivityIndicator size="small" color="#22B14C" />
-              <Text style={{ marginTop: 8, fontSize: 12, color: '#666' }}>
-                Memuat waktu sholat...
-              </Text>
-            </View>
-          ) : prayerTimes ? (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 12 }}>
-              <View style={styles.prayerTimesRow}>
-                {[
-                  { label: 'Subuh', time: prayerTimes.subuh, icon: 'cloud' },
-                  { label: 'Terbit', time: prayerTimes.terbit, icon: 'sunrise' },
-                  { label: 'Dzuhur', time: prayerTimes.dzuhur, icon: 'sun' },
-                  { label: 'Ashar', time: prayerTimes.ashar, icon: 'sunset' },
-                  { label: 'Maghrib', time: prayerTimes.maghrib, icon: 'moon' },
-                  { label: 'Isya', time: prayerTimes.isya, icon: 'moon' },
-                ].map((item, i) => (
-                  <View key={i} style={styles.prayercard}>
-                    <Icon name={item.icon} size={20} color="#333" />
-                    <Text style={styles.prayerLabel}>{item.label}</Text>
-                    <Text style={styles.prayerTime}>{item.time}</Text>
-                  </View>
-                ))}
-              </View>
+  {loading ? (
+    <View style={{ marginTop: 12, alignItems: 'center' }}>
+      <ActivityIndicator size="small" color="#22B14C" />
+      <Text style={{ marginTop: 8, fontSize: 12, color: '#22B14C' }}>Memuat waktu sholat...</Text>
+    </View>
+  ) : prayerTimes ? (
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 12 }}>
+      <View style={styles.prayerTimesRow}>
+        {[
+          { label: 'Subuh', time: prayerTimes.subuh, icon: 'cloud' },
+          { label: 'Terbit', time: prayerTimes.terbit, icon: 'sunrise' },
+          { label: 'Dzuhur', time: prayerTimes.dzuhur, icon: 'sun' },
+          { label: 'Ashar', time: prayerTimes.ashar, icon: 'sunset' },
+          { label: 'Maghrib', time: prayerTimes.maghrib, icon: 'moon' },
+          { label: 'Isya', time: prayerTimes.isya, icon: 'moon' },
+        ].map((item, i) => (
+          <View key={i} style={styles.prayercard}>
+            <Icon name={item.icon} size={20} color="#333" />
+            <Text style={styles.prayerLabel}>{item.label}</Text>
+            <Text style={styles.prayerTime}>{item.time}</Text>
+          </View>
+        ))}
+      </View>
             </ScrollView>
           ) : (
             <View style={{ marginTop: 12, alignItems: 'center' }}>
