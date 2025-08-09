@@ -142,10 +142,13 @@ export default function ProfileScreen({ navigation }: any) {
           <Icon name="chevron-right" size={20} color="#888" />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.menuItem}>
+        <TouchableOpacity
+          style={styles.menuItem}
+          onPress={() => navigation.navigate('gaji')}
+        >
           <View style={styles.menuLeft}>
-            <Icon name="moon" size={24} color="#0ea5e9" />
-            <Text style={styles.menuText}>Dark Mode</Text>
+            <Icon name="wallet" size={24} color="#7c3aed" />
+            <Text style={styles.menuText}>Gaji</Text>
           </View>
           <Icon name="chevron-right" size={20} color="#888" />
         </TouchableOpacity>

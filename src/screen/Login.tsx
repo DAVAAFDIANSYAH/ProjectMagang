@@ -48,7 +48,7 @@ export default function LoginScreen() {
         address: karyawan.alamat || '',
         position: karyawan.jabatan || '',
       };
-
+      
       // Simpan ke AsyncStorage
       await AsyncStorage.setItem('auth_token', token);
       await AsyncStorage.setItem('userName', user.name);

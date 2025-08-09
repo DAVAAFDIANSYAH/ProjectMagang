@@ -37,9 +37,9 @@ export default function BottomNav() {
             case 'Riwayat':
               label = 'Riwayat';
               break;
-            case 'Gaji':
-              label = 'Gaji';
-              break;
+            // case 'Gaji':
+            //   label = 'Gaji';
+            //   break;
             case 'Profile':
               label = 'Profil';
               break;
@@ -55,9 +55,9 @@ export default function BottomNav() {
             case 'Riwayat':
               iconName = focused ? 'calendar' : 'calendar-outline';
               break;
-            case 'Gaji':
-              iconName = focused ? 'wallet' : 'wallet-outline';
-              break;
+            // case 'Gaji':
+            //   iconName = focused ? 'wallet' : 'wallet-outline';
+            //   break;
             case 'Profile':
               iconName = focused ? 'person' : 'person-outline';
               break;
@@ -68,7 +68,7 @@ export default function BottomNav() {
     >
       <Tab.Screen name="Dashboard" component={Dashboard} />
       <Tab.Screen name="Riwayat" component={Riwayat} />
-      <Tab.Screen name="Gaji" component={gaji} />
+      {/* <Tab.Screen name="Gaji" component={gaji} /> */}
       <Tab.Screen name="Profile" component={Profile} />
     </Tab.Navigator>
   );

@@ -6,27 +6,72 @@ const Dashboardstyles = StyleSheet.create({
     backgroundColor: '#F8F9FB',
   },
   headerBox: {
-    backgroundColor: '#22B14C',
-    borderRadius: 24,
-    padding: 30,
-    margin: 16,
+    backgroundColor: '#8BC34A',
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    paddingVertical: 50,
+    paddingHorizontal: 30,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
+
   profileRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
   },
+
   avatar: {
-    width: 48,
-    height: 48,
+    width: 52,
+    height: 52,
     backgroundColor: '#ccc',
-    borderRadius: 24,
-    marginRight: 12,
+    borderRadius: 26,
+    marginRight: 14,
   },
+
+  nameRoleWrapper: {
+    flexDirection: 'column',
+    justifyContent: 'center',
+  },
+
   welcome: {
     color: '#fff',
     fontWeight: 'bold',
-    fontSize: 16,
+    fontSize: 17,
   },
+
+  jabatanText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '400',
+    marginTop: 2,
+  },
+
+  notifIconWrapper: {
+    position: 'relative',
+    padding: 4,
+  },
+
+  notifBadge: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    backgroundColor: 'red',
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  notifBadgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+
+
   role: {
     color: '#fff',
     fontSize: 14,
@@ -34,13 +79,20 @@ const Dashboardstyles = StyleSheet.create({
   },
   absenCard: {
     backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: 20,
+    paddingVertical: 24,
+    paddingHorizontal: 20,
     alignItems: 'center',
-    marginHorizontal: 16,
-    marginBottom: 16,
-    elevation: 3,
+    width: '85%',
+    alignSelf: 'center',
+    marginTop: -30,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
   },
+
   dateText: {
     fontSize: 14,
     color: '#666',
@@ -82,9 +134,8 @@ const Dashboardstyles = StyleSheet.create({
     justifyContent: 'space-between',
     marginHorizontal: 16,
     marginBottom: 16,
-    marginTop: 20, // ✅ tambahkan ini
-
-  },  
+    marginTop: 20,
+  },
   infoCard: {
     flex: 1,
     backgroundColor: '#fff',
@@ -103,13 +154,6 @@ const Dashboardstyles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-  jabatanText: {
-  color: '#fff',
-  fontSize: 14,
-  fontWeight: '400',
-  marginTop: 2,
-},
-
   messageBox: {
     backgroundColor: '#fff',
     padding: 16,
@@ -134,96 +178,101 @@ const Dashboardstyles = StyleSheet.create({
     color: '#888',
   },
   locationCard: {
-  backgroundColor: '#fff',
-  marginHorizontal: 20,
-  marginTop: 10,
-  padding: 15,
-  borderRadius: 10,
-  elevation: 3,
-},
-btnKeluar: {
-  backgroundColor: '#d9534f',
-  paddingVertical: 14,
-  paddingHorizontal: 25,
-  borderRadius: 10,
-  marginTop: 16,
-  alignItems: 'center',
-},
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 14,
+    marginHorizontal: 20,
+    marginTop: 12,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+  },
+  btnKeluar: {
+    backgroundColor: '#d9534f',
+    paddingVertical: 14,
+    paddingHorizontal: 25,
+    borderRadius: 10,
+    marginTop: 16,
+    alignItems: 'center',
+  },
 
-locationTitle: {
-  fontWeight: 'bold',
-  fontSize: 16,
-  marginBottom: 2,
-},
+  locationTitle: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    marginBottom: 2,
+  },
 
-locationSubtitle: {
-  fontSize: 14,
-  color: 'gray',
-  marginBottom: 10,
-},
+  locationSubtitle: {
+    fontSize: 14,
+    color: 'gray',
+    marginBottom: 10,
+  },
 
-prayerTimesRow: {
-  flexDirection: 'row',
-  justifyContent: 'space-between',
-},
+  prayerTimesRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
 
-prayerCard: {
-  backgroundColor: '#f0f0f0',
-  padding: 10,
-  borderRadius: 8,
-  alignItems: 'center',
-  width: 70,
-},
+  prayerCard: {
+    backgroundColor: '#f0f0f0',
+    padding: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    width: 70,
+  },
 
-prayerCardActive: {
-  backgroundColor: '#d0f5d0',
-  padding: 10,
-  borderRadius: 8,
-  alignItems: 'center',
-  width: 70,
-},
+  prayerCardActive: {
+    backgroundColor: '#d0f5d0',
+    padding: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    width: 70,
+  },
 
-prayerLabel: {
-  fontSize: 12,
-  color: '#333',
-},
+  prayerLabel: {
+    fontSize: 12,
+    color: '#333',
+  },
 
-prayerTime: {
-  fontSize: 14,
-  fontWeight: 'bold',
-},
+  prayerTime: {
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
 
-internshipCard: {
-  backgroundColor: '#fff',
-  marginHorizontal: 20,
-  marginTop: 15,
-  padding: 15,
-  borderRadius: 10,
-  elevation: 3,
-},
+  internshipCard: {
+    backgroundColor: '#fff',
+    marginHorizontal: 20,
+    marginTop: 15,
+    padding: 15,
+    borderRadius: 10,
+    elevation: 3,
+  },
 
-badgeRow: {
-  flexDirection: 'row',
-  marginBottom: 5,
-},
+  badgeRow: {
+    flexDirection: 'row',
+    marginBottom: 5,
+  },
 
-badgeMedium: {
-  backgroundColor: '#FFD700',
-  color: '#000',
-  paddingHorizontal: 8,
-  paddingVertical: 3,
-  borderRadius: 5,
-  marginRight: 5,
-  fontSize: 12,
-  fontWeight: 'bold',
-},
-prayerCardHorizontal: {
+  badgeMedium: {
+    backgroundColor: '#FFD700',
+    color: '#000',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 5,
+    marginRight: 5,
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  prayerCardHorizontal: {
     backgroundColor: '#f8f9fa',
     padding: 12,
     borderRadius: 10,
     alignItems: 'center',
     width: 75,
-    marginRight: 10, // ✅ SPACING ANTAR CARD
+    marginRight: 10,
     borderWidth: 1,
     borderColor: '#e9ecef',
     shadowColor: '#000',
@@ -235,8 +284,6 @@ prayerCardHorizontal: {
     shadowRadius: 2,
     elevation: 2,
   },
-
-  // UNTUK OPSI B: Grid Layout (RECOMMENDED)
   prayerContainer: {
     marginTop: 16,
     paddingHorizontal: 4,
@@ -245,17 +292,17 @@ prayerCardHorizontal: {
   prayerGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between', // ✅ SPACING OTOMATIS
+    justifyContent: 'space-between',
     alignItems: 'flex-start',
   },
 
   prayerCardGrid: {
-    width: '31%', // ✅ 3 cards per row dengan spacing otomatis
+    width: '31%',
     backgroundColor: '#f8f9fa',
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 8,
-    marginBottom: 12, // ✅ SPACING VERTIKAL
+    marginBottom: 12,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
@@ -286,14 +333,13 @@ prayerCardHorizontal: {
     textAlign: 'center',
   },
 
-  // Update existing prayerCard dengan spacing
   prayercard: {
     backgroundColor: '#f0f0f0',
     padding: 10,
     borderRadius: 8,
     alignItems: 'center',
     width: 70,
-    marginRight: 8, // ✅ TAMBAHKAN INI UNTUK SPACING
+    marginRight: 8,
   },
 
   prayerlabel: {
@@ -308,7 +354,11 @@ prayerCardHorizontal: {
     fontWeight: 'bold',
     color: '#22B14C',
   },
+  bottomButtonContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
 
 });
-
 export default Dashboardstyles;

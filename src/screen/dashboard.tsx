@@ -8,16 +8,21 @@ import {
   StatusBar,
   ActivityIndicator,
   RefreshControl,
+  StyleSheet,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/Feather';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import SwipeButton from 'rn-swipe-button';
+
+// Asumsi ini adalah import yang diperlukan dari file lain
 import { RootStackParamList } from '../types/Navigation';
-import styles from '../styles/Dashboardstyles';
 import { getCurrentPosition, getLocationName } from '../services/location';
 import { getPrayerTimes, PrayerTimes } from '../services/prayer';
 import api from '../services/api';
+import styles from '../styles/Dashboardstyles';
+
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Maps'>;
 
@@ -35,15 +40,13 @@ export default function Dashboard() {
   const [shiftStatus, setShiftStatus] = useState<'masuk' | 'none'>('none');
   const [startTime, setStartTime] = useState<Date | null>(null);
   const [elapsedTime, setElapsedTime] = useState('00:00:00');
-  const [unreadCount, setUnreadCount] = useState(0); // 🔹 jumlah notifikasi belum dibaca
+  const [swipeKey, setSwipeKey] = useState(0); // State baru untuk mereset tombol
 
-  // Timer jam real-time
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // Hitung waktu kerja
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (shiftStatus === 'masuk' && startTime) {
@@ -61,20 +64,6 @@ export default function Dashboard() {
     }
     return () => clearInterval(interval);
   }, [shiftStatus, startTime]);
-
-  // Ambil jumlah notifikasi belum dibaca
-  const fetchUnreadCount = useCallback(async () => {
-    try {
-      const stored = await AsyncStorage.getItem('notifications');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        const unread = parsed.filter((n: any) => !n.read).length;
-        setUnreadCount(unread);
-      }
-    } catch (e) {
-      console.log('Gagal mengambil unread count', e);
-    }
-  }, []);
 
   const fetchAllData = useCallback(async () => {
     setRefreshing(true);
@@ -100,7 +89,7 @@ export default function Dashboard() {
 
       const prayer = await getPrayerTimes(latitude, longitude);
       setPrayerTimes(prayer);
-    } catch (err) {
+    } catch {
       setLocation('Gagal mendapatkan lokasi');
       setPrayerTimes({
         subuh: '04:30',
@@ -116,13 +105,9 @@ export default function Dashboard() {
       const token = await AsyncStorage.getItem('auth_token');
       if (token) {
         const response = await api.get('/informasi-karyawan', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
-
         const info = response.data;
-
         if (info && info.title && info.description) {
           setInfoTitle(info.title);
           setInfoDescription(info.description);
@@ -131,8 +116,7 @@ export default function Dashboard() {
           setInfoDescription('Tidak ada informasi tersedia.');
         }
       }
-    } catch (error) {
-      console.error('Gagal mengambil informasi:', error);
+    } catch {
       setInfoTitle('Informasi');
       setInfoDescription('Tidak ada informasi tersedia.');
     }
@@ -149,12 +133,15 @@ export default function Dashboard() {
       setElapsedTime('00:00:00');
     }
 
-    // 🔹 Update unread badge
-    await fetchUnreadCount();
-
     setRefreshing(false);
     setLoading(false);
-  }, [fetchUnreadCount]);
+  }, []);
+
+  const handleSwipeSuccess = () => {
+    navigation.navigate('Maps');
+    // Reset tombol swipe dengan mengubah key
+    setSwipeKey(prevKey => prevKey + 1);
+  };
 
   useEffect(() => {
     fetchAllData();
@@ -170,9 +157,10 @@ export default function Dashboard() {
     <SafeAreaView style={styles.container}>
       <StatusBar backgroundColor="#22B14C" barStyle="light-content" />
       <ScrollView
-        contentContainerStyle={{ paddingBottom: 30 }}
+        contentContainerStyle={{ paddingBottom: 20 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={fetchAllData} colors={['#22B14C']} />}
       >
+        {/* HEADER */}
         <View style={styles.headerBox}>
           <View style={styles.profileRow}>
             <View style={styles.avatar} />
@@ -181,29 +169,13 @@ export default function Dashboard() {
               <Text style={styles.jabatanText}>{userJabatan}</Text>
             </View>
             <TouchableOpacity onPress={() => navigation.navigate('Notifikasi')}>
-              <View>
-                <Icon name="bell" size={24} color="#fff" />
-                {unreadCount > 0 && (
-                  <View
-                    style={{
-                      position: 'absolute',
-                      right: -6,
-                      top: -4,
-                      backgroundColor: 'red',
-                      borderRadius: 10,
-                      paddingHorizontal: 5,
-                      paddingVertical: 1,
-                    }}
-                  >
-                    <Text style={{ color: '#fff', fontSize: 10 }}>{unreadCount}</Text>
-                  </View>
-                )}
-              </View>
+              <Icon name="bell" size={24} color="#fff" />
             </TouchableOpacity>
           </View>
         </View>
 
-        <View style={styles.absenCard}>
+        {/* CARD ABSEN */}
+        <View style={[styles.absenCard, { width: '75%', alignSelf: 'center' }]}>
           <Text style={styles.dateText}>
             {new Intl.DateTimeFormat('id-ID', {
               weekday: 'long',
@@ -216,44 +188,35 @@ export default function Dashboard() {
             <Text style={styles.clockNumber}>{elapsedTime}</Text>
           </View>
           <Text style={styles.shift}>10:00 - 18:00</Text>
-          <TouchableOpacity
-            style={shiftStatus === 'none' ? styles.btnMasuk : styles.btnKeluar}
-            onPress={() => navigation.navigate('Maps')}
-          >
-            <Text style={styles.btnText}>→ {shiftStatus === 'none' ? 'Masuk' : 'Keluar'}</Text>
-          </TouchableOpacity>
         </View>
 
+        {/* CARD LOKASI & SHOLAT */}
         <View style={styles.locationCard}>
-  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-    <Icon name="map-pin" size={24} color="#007bff" style={{ marginRight: 6 }} />
-    <Text style={styles.locationTitle}>{location}</Text>
-  </View>
-  <Text style={styles.locationSubtitle}>Indonesia</Text>
-
-  {loading ? (
-    <View style={{ marginTop: 12, alignItems: 'center' }}>
-      <ActivityIndicator size="small" color="#22B14C" />
-      <Text style={{ marginTop: 8, fontSize: 12, color: '#22B14C' }}>Memuat waktu sholat...</Text>
-    </View>
-  ) : prayerTimes ? (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 12 }}>
-      <View style={styles.prayerTimesRow}>
-        {[
-          { label: 'Subuh', time: prayerTimes.subuh, icon: 'cloud' },
-          { label: 'Terbit', time: prayerTimes.terbit, icon: 'sunrise' },
-          { label: 'Dzuhur', time: prayerTimes.dzuhur, icon: 'sun' },
-          { label: 'Ashar', time: prayerTimes.ashar, icon: 'sunset' },
-          { label: 'Maghrib', time: prayerTimes.maghrib, icon: 'moon' },
-          { label: 'Isya', time: prayerTimes.isya, icon: 'moon' },
-        ].map((item, i) => (
-          <View key={i} style={styles.prayercard}>
-            <Icon name={item.icon} size={20} color="#333" />
-            <Text style={styles.prayerLabel}>{item.label}</Text>
-            <Text style={styles.prayerTime}>{item.time}</Text>
-          </View>
-        ))}
-      </View>
+          <Text style={styles.locationTitle}>{location}</Text>
+          <Text style={styles.locationSubtitle}>Indonesia</Text>
+          {loading ? (
+            <View style={{ marginTop: 12, alignItems: 'center' }}>
+              <ActivityIndicator size="small" color="#22B14C" />
+              <Text style={{ marginTop: 8, fontSize: 12, color: '#666' }}>Memuat waktu sholat...</Text>
+            </View>
+          ) : prayerTimes ? (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 12 }}>
+              <View style={styles.prayerTimesRow}>
+                {[
+                  { label: 'Subuh', time: prayerTimes.subuh, icon: 'cloud' },
+                  { label: 'Terbit', time: prayerTimes.terbit, icon: 'sunrise' },
+                  { label: 'Dzuhur', time: prayerTimes.dzuhur, icon: 'sun' },
+                  { label: 'Ashar', time: prayerTimes.ashar, icon: 'sunset' },
+                  { label: 'Maghrib', time: prayerTimes.maghrib, icon: 'moon' },
+                  { label: 'Isya', time: prayerTimes.isya, icon: 'moon' },
+                ].map((item, i) => (
+                  <View key={i} style={styles.prayercard}>
+                    <Icon name={item.icon} size={20} color="#333" />
+                    <Text style={styles.prayerLabel}>{item.label}</Text>
+                    <Text style={styles.prayerTime}>{item.time}</Text>
+                  </View>
+                ))}
+              </View>
             </ScrollView>
           ) : (
             <View style={{ marginTop: 12, alignItems: 'center' }}>
@@ -262,6 +225,7 @@ export default function Dashboard() {
           )}
         </View>
 
+        {/* CARD INFO */}
         <View style={styles.infoRow}>
           <View style={styles.infoCard}>
             <Text style={styles.infoTitle}>Keterlambatan</Text>
@@ -273,11 +237,33 @@ export default function Dashboard() {
           </View>
         </View>
 
+        {/* PESAN */}
         <View style={styles.messageBox}>
           <Text style={styles.messageHeader}>{infoTitle}</Text>
           <Text style={styles.messageText}>{infoDescription}</Text>
         </View>
       </ScrollView>
+      {/* TOMBOL MASUK/KELUAR DI LUAR CARD - DIBAWAH */}
+      <View style={styles.bottomButtonContainer}>
+        <SwipeButton
+          key={swipeKey}
+          height={55}
+          width={'95%'}
+          railBackgroundColor={shiftStatus === 'none' ? '#d4f5e0' : '#ffd6d6'}
+          railFillBackgroundColor={shiftStatus === 'none' ? '#22B14C' : '#FF5252'}
+          thumbIconBackgroundColor={'#fff'}
+          thumbIconComponent={() => (
+            <Icon
+              name="arrow-right"
+              size={20}
+              color={shiftStatus === 'none' ? '#22B14C' : '#FF5252'}
+            />
+          )}
+          title={shiftStatus === 'none' ? 'Swipe to Clock In' : 'Swipe to Clock Out'}
+          titleColor={shiftStatus === 'none' ? '#22B14C' : '#FF5252'}
+          onSwipeSuccess={handleSwipeSuccess}
+        />
+      </View>
     </SafeAreaView>
   );
 }
